@@ -28,12 +28,16 @@ public class FileStateEntity {
     @Column(name = "file_path", nullable = false, length = 1024)
     private String filePath;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false)
     private long version;
+
+    /** JPA optimistic lock — prevents lost-update race conditions on concurrent OT writes */
+    @Version
+    @Column(name = "row_version", nullable = false)
+    private long rowVersion;
 
     @Column(name = "last_modified_at", nullable = false)
     private Instant lastModifiedAt;

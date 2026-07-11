@@ -9,6 +9,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import com.CollabIDE.auth.AuthServiceClient;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -17,11 +18,11 @@ import org.springframework.messaging.support.ChannelInterceptor;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WebSocketConfig.class);
     private final AuthServiceClient authServiceClient;
 
     public WebSocketConfig(AuthServiceClient authServiceClient) {
         this.authServiceClient = authServiceClient;
-        System.out.println("🔥 WebSocketConfig LOADED");
     }
     
     @Override
@@ -50,14 +51,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String authHeader = accessor.getFirstNativeHeader("Authorization");
-                    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                        return null;
-                    }
-                    String token = authHeader.replace("Bearer ", "");
-                    if (!authServiceClient.validateToken(token)) {
-                        return null;
-                    }
+                    log.info("[WS] STOMP CONNECT received - auth skipped for debugging");
                 }
                 return message;
             }

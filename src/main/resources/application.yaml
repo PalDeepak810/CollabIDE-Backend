@@ -3,9 +3,9 @@ spring:
     name: COLLABIDE
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/collabide_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:Dp810@310}
     driver-class-name: org.postgresql.Driver
 
 
@@ -30,7 +30,8 @@ logging:
 
 app:
   auth:
-    base-url: ${AUTH_SERVICE_URL}
+    base-url: ${AUTH_SERVICE_URL:http://localhost:8080}
 
 server:
   port: ${PORT:8082}
+  address: 0.0.0.0

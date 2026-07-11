@@ -27,7 +27,7 @@ public class AuthProxyController {
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
+        String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
         return ResponseEntity.ok(authServiceClient.me(token));
     }
 }

@@ -10,11 +10,11 @@ public class WebSocketEventsLogger {
 
     @EventListener
     public void handleConnect(SessionConnectEvent event) {
-        System.out.println("✅ STOMP CONNECTED");
+        System.out.println("STOMP CONNECTED");
     }
 
     @EventListener
     public void handleSubscribe(SessionSubscribeEvent event) {
-        System.out.println("📡 STOMP SUBSCRIBED");
+        System.out.println("STOMP SUBSCRIBED");
     }
 }

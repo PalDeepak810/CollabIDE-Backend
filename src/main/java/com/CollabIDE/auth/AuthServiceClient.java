@@ -1,13 +1,13 @@
 package com.CollabIDE.auth;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Service
@@ -20,7 +20,10 @@ public class AuthServiceClient {
             RestTemplateBuilder restTemplateBuilder,
             @Value("${app.auth.base-url}") String baseUrl
     ) {
-        this.restTemplate = restTemplateBuilder.build();
+        this.restTemplate = restTemplateBuilder
+                .connectTimeout(Duration.ofSeconds(3))
+                .readTimeout(Duration.ofSeconds(3))
+                .build();
         this.baseUrl = baseUrl;
     }
 
@@ -30,7 +33,7 @@ public class AuthServiceClient {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                baseUrl + "/auth/me",
+                baseUrl + "/api/v1/auth/me",
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<>() {}
@@ -42,18 +45,18 @@ public class AuthServiceClient {
     public boolean validateToken(String token) {
         try {
             Map<String, Object> me = me(token);
-            return me != null && me.get("userId") != null;
-        } catch (RestClientException ex) {
+            return me != null && (me.get("id") != null || me.get("userId") != null);
+        } catch (Exception ex) {
             return false;
         }
     }
 
     public ResponseEntity<String> proxyLogin(Map<String, Object> body) {
-        return proxyPost("/auth/login", body);
+        return proxyPost("/api/v1/auth/login", body);
     }
 
     public ResponseEntity<String> proxyRegister(Map<String, Object> body) {
-        return proxyPost("/auth/register", body);
+        return proxyPost("/api/v1/auth/register", body);
     }
 
     private ResponseEntity<String> proxyPost(String path, Map<String, Object> body) {

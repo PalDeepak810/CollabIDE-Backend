@@ -17,6 +17,7 @@ import java.time.Instant;
 
 @Controller
 public class EditOperationWebSocketController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EditOperationWebSocketController.class);
     private final FileStateService fileStateService;
     private final SimpMessagingTemplate messagingTemplate;
     private final SessionService sessionService;
@@ -43,9 +44,16 @@ public class EditOperationWebSocketController {
         EditOperation operation=toDomainOperation(message);
 
         //2.Apply operation(OT+DB inside service)
-        FileState updated=fileStateService.applyOperation(operation);
+        FileState updated;
+        try {
+            updated = fileStateService.applyOperation(operation);
+        } catch (Exception e) {
+            log.error("[Edit] applyOperation failed for session={} file={}: {}",
+                    message.getSessionId(), message.getFilePath(), e.getMessage());
+            return;
+        }
 
-        //3.Broadcast updated file state (or better, broadcast the rebased operation - for now let's broadcast full update to maintain frontend compatibility until we update it)
+        //3.Broadcast updated file state
         FileUpdateMessage broadcast=new FileUpdateMessage();
         broadcast.setSessionId(updated.getSessionId());
         broadcast.setFilePath(updated.getFilePath());
@@ -59,7 +67,7 @@ public class EditOperationWebSocketController {
     }
 
 
-    //DTO->Domain
+    //Dto - domain
 
     private EditOperation toDomainOperation(EditOperationMessage msg){
         EditOperation op;

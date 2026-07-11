@@ -27,7 +27,7 @@ public class SimpleOTEngine implements OTEngine {
         return incoming;
     }
 
-    // ---------------- INSERT vs INSERT ----------------
+    //insert vs insert
     private EditOperation transformInsertInsert(
             InsertOperation incoming,
             InsertOperation concurrent
@@ -37,7 +37,7 @@ public class SimpleOTEngine implements OTEngine {
         if (concurrent.getPosition() < result.getPosition()) {
             result.setPosition(result.getPosition() + concurrent.getText().length());
         } else if (concurrent.getPosition() == result.getPosition()) {
-            // deterministic tie-breaker
+            //tie-breaker
             if (concurrent.getUserId().compareTo(result.getUserId()) < 0) {
                 result.setPosition(result.getPosition() + concurrent.getText().length());
             }
@@ -45,7 +45,7 @@ public class SimpleOTEngine implements OTEngine {
         return result;
     }
 
-    // ---------------- INSERT vs DELETE ----------------
+    //insert vs delete
     private EditOperation transformInsertDelete(
             InsertOperation incoming,
             DeleteOperation concurrent
@@ -62,7 +62,7 @@ public class SimpleOTEngine implements OTEngine {
         return result;
     }
 
-    // ---------------- DELETE vs INSERT ----------------
+    //delete vs insert
     private EditOperation transformDeleteInsert(
             DeleteOperation incoming,
             InsertOperation concurrent
@@ -72,18 +72,15 @@ public class SimpleOTEngine implements OTEngine {
         int insertPos = concurrent.getPosition();
         int insertLen = concurrent.getText().length();
 
-        if (insertPos < result.getPosition()) {
+        if (insertPos <= result.getPosition()) {
+            // Insert is before or at delete start — shift delete right
             result.setPosition(result.getPosition() + insertLen);
-        } else if (insertPos >= result.getPosition()
-                && insertPos < result.getPosition() + result.getLength()) {
-            // insert inside delete range → extend delete
-            result.setLength(result.getLength() + insertLen);
         }
 
         return result;
     }
 
-    // ---------------- DELETE vs DELETE ----------------
+    //delete vs delete
     private EditOperation transformDeleteDelete(
             DeleteOperation incoming,
             DeleteOperation concurrent
@@ -113,7 +110,7 @@ public class SimpleOTEngine implements OTEngine {
         return result;
     }
 
-    // ---------------- APPLY OPERATION ----------------
+    // apply operations
     @Override
     public String apply(String content, EditOperation operation) {
 
@@ -129,10 +126,10 @@ public class SimpleOTEngine implements OTEngine {
             int start = delete.getPosition();
             int end = start + delete.getLength();
 
-            //  SAFETY GUARDS (CRITICAL)
+
             if (start < 0) start = 0;
             if (end > content.length()) end = content.length();
-            if (start >= end) return content; // no-op delete
+            if (start >= end) return content;
 
             return content.substring(0, start) + content.substring(end);
         }
@@ -140,7 +137,7 @@ public class SimpleOTEngine implements OTEngine {
         return content;
     }
 
-    // ---------------- CLONERS ----------------
+    //  Cloners
     private InsertOperation cloneInsert(InsertOperation op) {
         InsertOperation clone = new InsertOperation();
         clone.setSessionId(op.getSessionId());

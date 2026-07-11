@@ -8,6 +8,9 @@ import com.CollabIDE.filestate.FileState;
 import com.CollabIDE.operation.DeleteOperation;
 import com.CollabIDE.operation.EditOperation;
 import com.CollabIDE.operation.OTEngine;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +26,9 @@ public class FileStateService {
         private final EditOperationRepository editOperationRepository;
         private final OTEngine otEngine;
 
+        @Autowired @Lazy
+        private FileStateService self;
+
         public FileStateService(
                         FileStateRepository fileStateRepository,
                         EditOperationRepository editOperationRepository,
@@ -32,10 +38,23 @@ public class FileStateService {
                 this.otEngine = otEngine;
         }
 
-        // CORE OT METHOD (DELETE-SAFE, ADVANCED-READY)
+        // core ot method
+
+        private static final int MAX_OT_RETRIES = 3;
+
+        public FileState applyOperation(EditOperation incoming) {
+            for (int attempt = 1; attempt <= MAX_OT_RETRIES; attempt++) {
+                try {
+                    return self.applyOperationOnce(incoming);
+                } catch (OptimisticLockingFailureException e) {
+                    if (attempt == MAX_OT_RETRIES) throw e;
+                }
+            }
+            throw new IllegalStateException("OT retry limit exceeded");
+        }
 
         @Transactional
-        public FileState applyOperation(EditOperation incoming) {
+        protected FileState applyOperationOnce(EditOperation incoming) {
 
                 // 1️. Load managed entity
                 var entity = fileStateRepository
@@ -60,7 +79,7 @@ public class FileStateService {
                         rebased = otEngine.transform(rebased, concurrent);
                 }
 
-                // IMPORTANT: ignore empty DELETE after transform
+                // ignore empty DELETE after transform
                 if (rebased instanceof DeleteOperation del) {
                         if (del.getLength() <= 0) {
                                 return FileStateMapper.toDomain(entity);
@@ -80,7 +99,7 @@ public class FileStateService {
                 editOperationRepository.save(
                                 EditOperationMapper.toEntity(rebased));
 
-                // 6️. Mutate SAME managed entity (UPDATE)
+                // 6️. mutate same managed entity (update)
                 entity.setContent(newContent);
                 entity.setVersion(entity.getVersion() + 1);
                 entity.setLastModifiedAt(Instant.now());
@@ -92,7 +111,7 @@ public class FileStateService {
                 return FileStateMapper.toDomain(entity);
         }
 
-        // FILE CREATION
+        // File creation
 
         @Transactional
         public FileState createFile(
@@ -124,7 +143,7 @@ public class FileStateService {
                 return file;
         }
 
-        // READ METHODS
+        // Read methods
         public Collection<FileState> listFiles(UUID sessionId) {
                 return fileStateRepository
                                 .findBySessionId(sessionId)
@@ -133,7 +152,7 @@ public class FileStateService {
                                 .toList();
         }
 
-        // NON-OT UPDATE
+        // Non-ot update
         @Transactional
         public FileState updateFileContent(
                         UUID sessionId,

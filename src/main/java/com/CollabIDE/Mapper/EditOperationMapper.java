@@ -7,9 +7,8 @@ import com.CollabIDE.operation.InsertOperation;
 
 public class EditOperationMapper {
 
-    // ============================
-    // DOMAIN → ENTITY
-    // ============================
+
+    // Domain to entity
     public static EditOperationEntity toEntity(EditOperation op) {
         EditOperationEntity entity = new EditOperationEntity();
 
@@ -19,7 +18,6 @@ public class EditOperationMapper {
         entity.setBaseVersion(op.getBaseVersion());
         entity.setTimestamp(op.getTimestamp());
 
-        // 🔥 FIX: enum → enum
         entity.setType(
                 EditOperationEntity.OperationType.valueOf(op.getType().name())
         );
@@ -40,10 +38,7 @@ public class EditOperationMapper {
         return entity;
     }
 
-
-    // ============================
-    // ENTITY → DOMAIN (NULL SAFE)
-    // ============================
+    //Entity to domain (null safe)
     public static EditOperation toDomain(EditOperationEntity entity) {
 
         EditOperation op;

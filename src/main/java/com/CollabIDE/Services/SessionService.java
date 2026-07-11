@@ -52,24 +52,7 @@ public class SessionService {
     public SessionState joinSession(UUID sessionId, String userId, String tabId) {
 
         if (sessionRepository.findById(sessionId).isEmpty()) {
-            Session session = Session.builder()
-                    .sessionId(sessionId)
-                    .ownerUserId(userId)
-                    .createdAt(Instant.now())
-                    .build();
-            sessionRepository.save(SessionMapper.toEntity(session));
-
-            SessionParticipant owner = SessionParticipant.builder()
-                    .sessionId(sessionId)
-                    .userID(userId)
-                    .tabId(tabId)
-                    .role(SessionParticipant.Role.OWNER)
-                    .joinedAt(Instant.now())
-                    .lastActiveAT(Instant.now())
-                    .build();
-            sessionParticipantRepository.save(SessionParticipantMapper.toEntity(owner));
-
-            return assembleSessionState(sessionId);
+            throw new IllegalArgumentException("Session not found: " + sessionId);
         }
 
         boolean exists = sessionParticipantRepository

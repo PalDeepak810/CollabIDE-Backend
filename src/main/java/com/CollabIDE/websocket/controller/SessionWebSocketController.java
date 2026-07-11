@@ -46,22 +46,19 @@ public class SessionWebSocketController {
             Map<String, Object> u = new HashMap<>();
             u.put("userId", p.getUserID());
             u.put("tabId", p.getTabId());
-            u.put("name", p.getUserID()); // Using userID as name for now as JoinRequest doesn't have name sometimes
+            u.put("name", p.getUserID());
             return u;
         }).collect(Collectors.toList()));
 
         messagingTemplate.convertAndSend("/topic/session/" + sessionId, presenceMsg);
 
-        // 3. Send full session state to the joining user (SESSION_STATE)
+        // 3. Send full session state to the joining user
         Map<String, Object> stateMsg = new HashMap<>();
         stateMsg.put("type", "SESSION_STATE");
         stateMsg.put("files", fileStateService.listFiles(sessionId));
         stateMsg.put("users", presenceMsg.get("users"));
         stateMsg.put("ownerId", state.getSession().getOwnerUserId());
 
-        // In a real STOMP setup, we might use @SendToUser or similar, 
-        // but for simplicity let's broadcast or assume client handles it.
-        // Actually, broadcasting state is fine for small groups.
         messagingTemplate.convertAndSend("/topic/session/" + sessionId, stateMsg);
     }
 
@@ -83,5 +80,4 @@ public class SessionWebSocketController {
         messagingTemplate.convertAndSend("/topic/session/" + sessionId, msg);
     }
 
-    // Add other file operations as needed...
 }

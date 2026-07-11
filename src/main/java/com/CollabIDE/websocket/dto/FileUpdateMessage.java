@@ -6,6 +6,7 @@ import java.util.UUID;
 
 @Data
 public class FileUpdateMessage {
+    private String type = "FILE_UPDATE";
     private UUID sessionId;
     private String filePath;
     private String content;
