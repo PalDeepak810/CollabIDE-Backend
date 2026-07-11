@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/session")
+@RequestMapping("/api/v1/session")
 @RequiredArgsConstructor
 public class SessionController {
 
